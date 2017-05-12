@@ -1,0 +1,246 @@
+﻿@using CourseProjectSculptureWorks.Data
+@inject ApplicationDbContext db
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+
+    <environment names="Development">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+        <link rel="stylesheet" href="~/css/site.css" />
+    </environment>
+    <environment names="Staging,Production">
+        <link rel="stylesheet" href="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.6/css/bootstrap.min.css"
+              asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
+              asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
+        <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
+    </environment>
+</head>
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a asp-area="" asp-controller="Home" asp-action="Sculptures" class="navbar-brand"></a>
+            </div>
+            <div class="navbar-collapse collapse">
+                @if (User.Identity.IsAuthenticated)
+                {
+                <ul class="nav navbar-nav">
+                    <li><a asp-area="" asp-controller="Home" asp-action="Sculptures">Скульптуры</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">База данных<b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li><a asp-controller="Home" asp-action="Sculptures">Скульптуры</a></li>
+                            <li><a asp-controller="Home" asp-action="Sculptors">Скульпторы</a></li>
+                            <li><a asp-controller="Home" asp-action="Styles">Стили</a></li>
+                            <li class="divider"></li>
+                            <li><a asp-action="Locations" asp-controller="Home">Местоположения</a></li>
+                            <li><a asp-action="Transfers" asp-controller="Home">Перемещения</a></li>
+                            <li class="divider"></li>
+                            <li><a asp-controller="Home" asp-action="Excursions">Экскурсии</a></li>
+                            <li><a asp-controller="Home" asp-action="ExcursionTypes">Виды экскурсий</a></li>
+                        </ul>
+                    </li>
+                    @if (User.IsInRole("Administrator"))
+                    {
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Статистика<b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#" id="firstStat">Количество скульптур за определенное время</a></li>
+                                <li><a asp-controller="Statistics" asp-action="StylesPopularity">Популярность стилей скульптуры</a></li>
+                                <li><a asp-controller="Statistics" asp-action="AttendanceOfLocations">Посещаемость экскурсий по городам</a></li>
+                                <li><a asp-controller="Statistics" asp-action="CountryStatistics">Культурное наследство стран</a></li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Отчеты<b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#" id="firstReport">Отчет по работам скульптора</a></li>
+                                <li><a href="#" id="secondReport">Отчет по проведенным экскурсиям по местоположению</a></li>
+                            </ul>
+                        </li>
+                    }
+                    @if (User.IsInRole("Administrator") || User.IsInRole("Guide"))
+                    {
+                    <li><a href="#" id="aut">Планирование экскурсий</a></li>
+                    }
+                    <li><a asp-area="" asp-controller="Home" asp-action="About">Справка</a></li>
+                </ul>
+                }
+                @await Html.PartialAsync("_LoginPartial")
+            </div>
+        </div>
+    </div>
+    
+    <div id="myModalBox" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title">Получение статистики о количестве скульптур за последние n лет</h4>
+                </div>
+                <div class="modal-body">
+                    <form style="margin-left:27%;" method="get" class="form-horizontal" asp-controller="Statistics" asp-action="NumberOfSculpturesForCertainTime">
+                        <input class="form-control" name="year" type="number" placeholder="Введите количество лет" /><br />
+                        <input style="width:100%;" class="btn btn-primary" type="submit" value="Получить статистику" />
+                    </form>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="myReportBox" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title">Отчет по работам скульптора</h4>
+                </div>
+                <div class="modal-body">
+                    <form style="margin-left:27%;" method="get" class="form-horizontal" asp-controller="Report" asp-action="WorksOfSculptorReport">
+                        <h4 style="margin-left:13%;">Выберите скульптора</h4>
+                        <select class="form-control" name="sculptorId">
+                            @foreach(var sculptor in db.Sculptors)
+                            {
+                                <option value="@sculptor.SculptorId">@sculptor.Name</option>
+                            }
+                        </select><br />
+                        <input style="width:100%;" class="btn btn-primary" type="submit" value="Получить отчет" />
+                    </form>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="myAutBox" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title">Автоматическое расписание экскурсий</h4>
+                </div>
+                <div class="modal-body">
+                    <form style="margin-left:27%;" method="get" class="form-horizontal" asp-controller="Automation" asp-action="CombinationsOfExcursions">
+                        <h4 style="text-align:center;width:300px;">Выберите город, время для экскурсий, вид экскурсий и количество человек</h4>
+                        <input type="text" name="subjects" class="form-control" placeholder="Тематика" /><br />
+                        <input type="date" name="date" class="form-control" /><br />
+                        <select class="form-control" name="city">
+                            @foreach (var city in db.Locations.GroupBy(l => l.City))
+                            {
+                                <option value="@city.Key">@city.Key</option>
+                            }
+                        </select><br />
+                        <input type="number" class="form-control" name="minutesForExcursions" placeholder="Время (мин)" />
+                        <br />
+                        <select class="form-control" name="excursionTypeId">
+                            @foreach(var excursionType in db.ExcursionTypes)
+                            {
+                                <option value="@excursionType.ExcursionTypeId">@excursionType.NameOfType</option>
+                            }
+                        </select>
+                        <br />
+                        <input class="form-control" type="number" name="numberOfPeople" placeholder="Количество человек" />
+                        <br />
+                        <input style="width:100%;" class="btn btn-primary" type="submit" value="Получить экскурсии" />
+                    </form>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="myCityBox" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title">Добавление пермещения по городу</h4>
+                </div>
+                <div class="modal-body">
+                    <form style="margin-left:27%;" method="get" class="form-horizontal" asp-controller="Home" asp-action="AddNewTransfer">
+                        <h4 style="margin-left:13%;">Выберите город</h4>
+                        <select class="form-control" name="city">
+                            @foreach (var city in db.Locations.GroupBy(l => l.City))
+                            {
+                                <option value="@city.Key">@city.Key</option>
+                            }
+                        </select><br />
+                        <input style="width:100%;" class="btn btn-primary" type="submit" value="Дальше" />
+                    </form>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="mySecondReportBox" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title">Отчет о проведенных экскурсиях по местоположению</h4>
+                </div>
+                <div class="modal-body">
+                    <form style="margin-left:27%;" method="get" class="form-horizontal" asp-controller="Report" asp-action="ConductedExcursions">
+                        <h4 style="margin-left:7%;">Выберите местоположение</h4>
+                        
+                        <select name="locationId" class="form-control">
+                            @foreach(var location in db.Locations)
+                            {
+                                <option value="@location.LocationId">@location.LocationName</option>
+                            }
+                        </select>
+                        <br />
+                        <input type="submit" style="width:100%;" class="btn btn-primary" value="Получить отчет" />
+                    </form>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container body-content">
+        @RenderBody()
+        
+        <footer>
+            
+        </footer>
+    </div>
+
+    <environment names="Development">
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="~/js/site.js" asp-append-version="true"></script>
+    </environment>
+    <environment names="Staging,Production">
+        <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-2.2.0.min.js"
+                asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
+                asp-fallback-test="window.jQuery">
+        </script>
+        <script src="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.6/bootstrap.min.js"
+                asp-fallback-src="~/lib/bootstrap/dist/js/bootstrap.min.js"
+                asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal">
+        </script>
+        <script src="~/js/site.min.js" asp-append-version="true"></script>
+    </environment>
+
+    @RenderSection("scripts", required: false)
+</body>
+</html>

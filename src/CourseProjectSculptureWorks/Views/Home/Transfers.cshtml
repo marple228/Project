@@ -1,0 +1,128 @@
+﻿@using CourseProjectSculptureWorks.Models.Entities
+@model List<Transfer>
+
+
+@{ 
+    ViewData["Title"] = "Перемещения";
+}
+
+<link rel="stylesheet" href="~/css/tableStyles.css" />
+<link rel="stylesheet" href="~/css/transfers.css" />
+<link rel="stylesheet" href="~/css/search.css" />
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="~/js/transfers.js"></script>
+
+
+<div class="column features">
+    <a style="width:100%;" class="btn btn-success" asp-action="Transfers">Показать все</a><br />
+    <form asp-action="Transfers" style="margin-top:20px;" method="get" class="form-horizontal">
+        <h4>Поиск</h4>
+        <input class="form-control" name="searchString" type="text" placeholder="Название местоположения" value="@ViewBag.SearchString" />
+        <input style="width:100%; margin-top:5px;" type="submit" value="Поиск" class="btn btn-info" />
+        <div>
+            <h4>
+                Сортировка
+            </h4>
+            <select class="form-control" name="sortOrder">
+                <option sortOrder="0" value="0">По возростанию</option>
+                <option sortOrder="1" value="1">По убыванию</option>
+            </select>
+            <div class="radio">
+                <label><input type="radio" name="sortNum" value="0" checked>В исходном порядке</label>
+            </div>
+            <div class="radio">
+                <label><input type="radio" name="sortNum" value="1">По длительности</label>
+            </div>
+            <div class="radio">
+                <label><input type="radio" name="sortNum" value="2">По первому метоположению</label>
+            </div>
+            <div class="radio">
+                <label><input type="radio" name="sortNum" value="2">По второму метоположению</label>
+            </div>
+            <input style="width:100%; margin-top:5px;" type="submit" value="Сортировать" class="btn btn-primary" />
+        </div>
+    </form>
+</div>
+
+<div class="column mainPart">
+    @if (User.IsInRole("Administrator") || User.IsInRole("Guide"))
+    {
+    <a id="tran" class="addBtn"><span class="glyphicon glyphicon-plus"></span>  Добавить перемещение</a>
+    }
+    <div class="styleContainer">
+        @if (Model != null && Model.Count != 0)
+        {
+            <table id="styleTable" style="width:700px;" class="simple-little-table" cellspacing='0'>
+                <tr style="background-color:aqua;">
+                    <th style="width:250px;"><b>Местоположение 1</b></th>
+                    <th style="width:250px;"><b>Местоположение 2</b></th>
+                    <th style="width:100px;"><b>Длительность перемещения</b></th>
+                    @if (User.IsInRole("Administrator") || User.IsInRole("Guide"))
+                    {
+                    <th style="width:50px;"></th>
+                    <th style="width:50px;"></th>
+                    }
+                </tr>
+
+                @foreach (var transfer in Model)
+                {
+                    if (ViewBag.SearchIds != null && ViewBag.SearchIds.Contains(transfer.StartLocationId.ToString() + transfer.FinishLocationId.ToString()))
+                    {
+                        <tr id="@transfer.StartLocationId + @transfer.FinishLocationId">
+                            <td style="background:#98FB98;">@transfer.StartLocation.LocationName</td>
+                            <td style="background:#98FB98;">@transfer.FinishLocation.LocationName</td>
+                            <td style="background:#98FB98;">@transfer.Duration мин</td>
+                            <td style="background:#98FB98;">
+                                <a style="color:cornflowerblue;" asp-action="EditTransfer" asp-route-startLocationId="@transfer.StartLocationId" asp-route-finishLocationId="@transfer.FinishLocationId">
+                                    <span class="glyphicon glyphicon-pencil"></span>
+                                </a>
+                            </td>
+                            <td style="background:#98FB98;">
+                                <a startLocationId="@transfer.StartLocationId" finishLocationId="@transfer.FinishLocationId" style="color:crimson;" class="del">
+                                    <span class="glyphicon glyphicon-trash"></span>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr id="@(transfer.StartLocationId + "" + transfer.FinishLocationId)">
+                            <td>@transfer.StartLocation.LocationName</td>
+                            <td>@transfer.FinishLocation.LocationName</td>
+                            <td>@transfer.Duration мин</td>
+                            @if (User.IsInRole("Administrator") || User.IsInRole("Guide"))
+                            {
+                            <td>
+                                <a style="color:cornflowerblue;" asp-action="EditTransfer" asp-route-startLocationId="@transfer.StartLocationId" asp-route-finishLocationId="@transfer.FinishLocationId">
+                                    <span class="glyphicon glyphicon-pencil"></span>
+                                </a>
+                            </td>
+                            <td>
+                                <a startLocationId="@transfer.StartLocationId" finishLocationId="@transfer.FinishLocationId" style="color:crimson;" class="del">
+                                    <span class="glyphicon glyphicon-trash"></span>
+                                </a>
+                            </td>
+                            }
+                        </tr>
+                    }
+                }
+            </table>
+        }
+        else
+        {
+            <h3>В базе данных отсутствует искомая информация о перемещениях..</h3>
+        }
+    </div>
+</div>
+
+
+@if (ViewBag.Checked != 0)
+{
+    <script>
+        var checkedNum = @ViewBag.Checked;
+        var sortOrder = @ViewBag.SortOrder;
+        $("input[value=" + checkedNum + "]").attr("checked", true);
+        $("option[sortOrder=" + sortOrder + "]").attr("selected", true);
+    </script>
+}
+

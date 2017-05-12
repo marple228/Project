@@ -1,0 +1,150 @@
+﻿@using CourseProjectSculptureWorks.Models.Entities
+@model List<Style>
+
+@{
+    ViewData["Title"] = "Стили";
+}
+
+<link rel="stylesheet" href="~/css/tableStyles.css" />
+<link rel="stylesheet" href="~/css/styles.css" />
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="~/js/styles.js"></script>
+
+
+<div class="column features">
+    <a style="width:100%;" class="btn btn-success" asp-action="Styles">Показать все</a><br />
+    <form style="margin-top:20px;" method="get" class="form-horizontal">
+        <h4>Поиск</h4>
+        <select name="searchCriteria" class="form-control">
+            <option value="0">По всем параметрам</option>
+            <option value="1">По названию</option>
+            <option value="2">по стране</option>
+        </select><br />
+        <input class="form-control" name="searchString" type="text" placeholder="Название стиля, страна" value="@ViewBag.SearchString" />
+        <input style="width:100%; margin-top:5px;" type="submit" value="Поиск" class="btn btn-info" />
+    <div>
+        <h4>
+            Сортировка
+        </h4>
+        <select class="form-control" name="sortOrder">
+            <option sortOrder="0" value="0">По возростанию</option>
+            <option sortOrder="1" value="1">По убыванию</option>
+        </select>
+            <div class="radio">
+                <label><input type="radio" name="sortNum" value="0" checked>В исходном порядке</label>
+            </div>
+            <div class="radio">
+                <label><input type="radio" name="sortNum" value="1">По эпохе возникновения</label>
+            </div>
+
+            <div class="radio">
+                <label><input type="radio" name="sortNum" value="2">По стране</label>
+            </div>
+            <input style="width:100%; margin-top:5px;" type="submit" value="Сортировать" class="btn btn-primary" />
+    </div>
+
+    <h4>Фильтр</h4>
+        <div class="checkbox">
+            <label><input type="checkbox" flag="1" name="boxFilter" value="Античность">Античность</label>
+        </div>
+        <div class="checkbox">
+            <label><input type="checkbox" flag="2" name="boxFilter" value="Средневековье">Средневековье</label>
+        </div>
+        <div class="checkbox">
+            <label><input type="checkbox" flag="3" name="boxFilter" value="Ренесанс">Ренесанс</label>
+        </div>
+        <div class="checkbox">
+            <label><input type="checkbox" flag="4" name="boxFilter" value="Новое время">Новое время</label>
+        </div>
+        <input style="width:100%; margin-top:5px;" type="submit" value="Фильтровать" class="btn btn-primary" />
+    </form>
+</div>
+
+<div class="column mainPart">
+    @if (User.IsInRole("Administrator"))
+    {
+        <a asp-action="CreateNewStyle" class="addBtn"><span class="glyphicon glyphicon-plus"></span>  Добавить стиль</a>
+    }
+    <div class="styleContainer">
+        @if (Model != null && Model.Count != 0)
+        {
+            <table id="styleTable" class="simple-little-table" cellspacing='0'>
+                <tr style="background-color:aqua;">
+                    <th><b>Название стиля</b></th>
+                    <th><b>Эпоха возникновения</b></th>
+                    <th><b>Страна</b></th>
+                    @if (User.IsInRole("Administrator"))
+                    {
+                        <th></th>
+                        <th></th>
+                    }
+                </tr>
+
+                @foreach (var style in Model)
+                {
+                    if (ViewBag.StyleIds != null && ViewBag.StyleIds.Contains(style.StyleId))
+                    {
+                        <tr id="@style.StyleId">
+                            <td style="background:#98FB98;">@style.StyleName</td>
+                            <td style="background:#98FB98;">@style.Era</td>
+                            <td style="background:#98FB98;">@style.Country</td>
+                            @if (User.IsInRole("Administrator"))
+                            {
+                                <td style="background:#98FB98;"><a title="Редактировать" style="color:cornflowerblue;" asp-action="EditStyle" asp-route-styleId="@style.StyleId"><span class="glyphicon glyphicon-pencil"></span></a></td>
+                                <td style="background:#98FB98;"><a class="del" style="color:crimson;" styleId="@style.StyleId" title="Удалить"><span class="glyphicon glyphicon-trash"></span></a></td>
+                            }
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr id="@style.StyleId">
+                            <td>@style.StyleName</td>
+                            <td>@style.Era</td>
+                            <td>@style.Country</td>
+                            @if (User.IsInRole("Administrator"))
+                            {
+                                <td><a title="Редактировать"  style="color:cornflowerblue;" asp-action="EditStyle" asp-route-styleId="@style.StyleId"><span class="glyphicon glyphicon-pencil"></span></a></td>
+                                <td><a class="del" style="color:crimson;" styleId="@style.StyleId" title="Удалить"><span class="glyphicon glyphicon-trash"></span></a></td>
+                            }
+                        </tr>
+                    }
+                }
+            </table>
+        }
+        else
+        {
+            <h3>В базе данных отсутствует искомая информация о стилях скульптуры...</h3>
+        }
+    </div>
+</div>
+
+
+@if(ViewBag.Checked != 0)
+{
+    <script>
+        var checkedNum = @ViewBag.Checked;
+        var sortOrder = @ViewBag.SortOrder;
+        $("input[value=" + checkedNum + "]").attr("checked", true);
+        $("option[sortOrder=" + sortOrder + "]").attr("selected", true);
+    </script>
+}
+
+@if (ViewBag.Filters != null)
+{
+    foreach (var filter in ((List<int>)ViewBag.Filters))
+    {
+        <script>
+            var scriptFilter = @filter;
+            $("input[flag=" + scriptFilter + "]").attr("checked", true);
+        </script>
+    }
+}
+
+
+@if(ViewBag.SearchCriteria != 0)
+{
+    <script>
+        var searchCriteria = @ViewBag.SearchCriteria;
+        $("option[value=" + searchCriteria + "]").attr("selected", true);
+    </script>
+}

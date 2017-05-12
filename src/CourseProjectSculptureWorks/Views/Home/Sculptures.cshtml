@@ -1,0 +1,188 @@
+﻿@using CourseProjectSculptureWorks.Models.Entities
+@model List<Sculpture>
+
+@{
+    ViewData["Title"] = "Скульптуры";
+    var sculpturesId = (int[])ViewBag.SculpturesId;
+    int count = 0;
+}
+
+<link rel="stylesheet" href="~/css/sculptures.css" />
+<link rel="stylesheet" href="~/css/tableStyles.css" />
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="~/js/sculptures.js"></script>
+
+<div id="dash" style="position:fixed; font-size:xx-large; z-index: 101;">
+    <div class="modal-header">
+        <button type="button" id="close" style="color:white;" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <p class="modal-title" style="color:white;font-size:14px;"><b>Поиск: </b>@ViewBag.SearchString</p>
+    </div>
+    <a data-href="#1" class="btn btn-primary" id="step_back"> < </a>
+    <a data-href="#1" class="btn btn-primary" id="step_forward"> > </a>
+</div>
+@if (User.IsInRole("Administrator"))
+{
+<a asp-action="AddSculptureNewForm" class="addBtn"><span class="glyphicon glyphicon-plus"></span>   Добавить скульптуру</a>
+}
+else
+{
+    <br />
+}
+<a asp-action="Sculptures" class="btn btn-success">Показать все</a>
+<div class="features">
+    <form asp-action="Sculptures" method="get">
+        <div class="column">
+            <h4 style="margin-left:60px;">Поиск</h4>
+            <select name="searchCriteria" class="form-control" style="margin-bottom:5px;">
+                <option criteria="0" value="0">По всем параметрам</option>
+                <option criteria="1" value="1">По названию</option>
+                <option criteria="2" value="2">По скульптору</option>
+                <option criteria="3" value="3">По стилю</option>
+                <option criteria="4" value="4">По местоположению</option>
+                <option criteria="5" value="5">По материалу</option>
+                <option criteria="6" value="6">По году создания</option>
+                <option criteria="7" value="7">По площади</option>
+                <option criteria="8" value="8">По высоте</option>
+            </select>
+            <input name="searchString" value="@ViewBag.SearchString" type="text" class="form-control" placeholder="Название, стиль..." /><br />
+            <input style="width:100%;" type="submit" class="btn btn-info" value="Найти" />
+        </div>
+        <div class="column" style="margin-left:220px; margin-top:-13px; width:200px;">
+            <h4 style="margin-left:40px;">Сортировка</h4>
+            <select class="form-control" name="sortOrder" style="margin-bottom:5px;">
+                <option sortOrder="0" value="0">По возрастанию</option>
+                <option sortOrder="1" value="1">По убыванию</option>
+            </select>
+            <select class="form-control" name="sortNum">
+                <option value="0">В исходном порядке</option>
+                <option value="1">По виду</option>
+                <option value="2">По скульптору</option>
+                <option value="3">По стилю</option>
+                <option value="4">По местоположению</option>
+                <option value="5">По материалу</option>
+                <option value="6">По году создания</option>
+                <option value="7">По площади</option>
+                <option value="8">По высоте</option>
+            </select><br />
+            <input style="width:100%;" type="submit" class="btn btn-info" value="Сортировать" />
+        </div>
+        <div style="margin-left:200px; margin-top:-10px; width:200px;" class="column">
+            <h4 style="margin-left:40px;">Фильтрация</h4>
+            <div class="checkbox">
+                <label><input type="checkbox" flag="1" name="boxFilter" value="Круглая">Круглая</label>
+            </div>
+            <div style="margin-left:25px;" class="checkbox">
+                <label><input type="checkbox" flag="2" name="boxFilter" value="Рельефная">Рельефная</label>
+            </div>
+            <input style="width:100%; margin-top:10px;" type="submit" class="btn btn-info" value="Фильтровать" />
+        </div>
+    </form>
+</div>
+<div>
+    @if (Model != null && Model.Count != 0)
+    {
+        <table class="simple-little-table" cellspacing='0' id="sculptureTable">
+            <tr>
+                <th>Название</th>
+                <th>Вид</th>
+                <th>Скульптор</th>
+                <th>Стиль</th>
+                <th>Местопложение</th>
+                <th>Материал</th>
+                <th>Год создания</th>
+                <th>Площадь</th>
+                <th>Высота</th>
+                @if (User.IsInRole("Administrator"))
+                {
+                    <th></th>
+                    <th></th>
+                }
+            </tr>
+            @foreach (var sculpture in Model)
+            {
+                
+                if (sculpturesId != null && sculpturesId.Contains(sculpture.Id))
+                {
+                    <tr id="@sculpture.Id" name="@count">
+                        <td count="@count" id="@count" style="background:#98FB98;">@sculpture.Name</td>
+                        <td count="@count" style="background:#98FB98;">@sculpture.Type</td>
+                        <td count="@count" style="background:#98FB98;"><a style="text-decoration:none;" asp-action="Sculptors" asp-route-searchCriteria="1" asp-route-searchString="@sculpture.Sculptor.Name">@sculpture.Sculptor.Name</a></td>
+                        <td count="@count" style="background:#98FB98;"><a style="text-decoration:none;" asp-action="Styles" asp-route-searchString="@sculpture.Style.StyleName">@sculpture.Style.StyleName</a></td>
+                        <td count="@count" style="background:#98FB98;"><a style="text-decoration:none;" asp-action="Locations" asp-route-searchString="@sculpture.Location.LocationName">@sculpture.Location.LocationName</a></td>
+                        <td count="@count" style="background:#98FB98;">@sculpture.Material</td>
+                        <td count="@count" style="background:#98FB98;">@sculpture.Year год</td>
+                        <td count="@count" style="background:#98FB98;">@sculpture.Square м<sup>2</sup></td>
+                        <td count="@count" style="background:#98FB98;">@sculpture.Height м</td>
+                        @if (User.IsInRole("Administrator"))
+                        {
+                            <td count="@count" style="background:#98FB98;"><a title="Редактировать" style="color:cornflowerblue;" asp-action="EditSculptureNewForm" asp-route-sculptureId="@sculpture.Id"><span class="glyphicon glyphicon-pencil"></span></a></td>
+                            <td count="@count" style="background:#98FB98;"><a title="Удалить" style="color:crimson;" class="del" sculptureId="@sculpture.Id"><span class="glyphicon glyphicon-trash"></span></a></td>
+                        }
+                    </tr>
+                    count++;
+                }
+                else
+                {
+                    <tr id="@sculpture.Id">
+                        <td>@sculpture.Name</td>
+                        <td>@sculpture.Type</td>
+                        <td><a target="_blank" style="text-decoration:none;" asp-action="Sculptors" asp-route-searchCriteria="1" asp-route-searchString="@sculpture.Sculptor.Name">@sculpture.Sculptor.Name</a></td>
+                        <td><a target="_blank" style="text-decoration:none;" asp-action="Styles" asp-route-searchString="@sculpture.Style.StyleName">@sculpture.Style.StyleName</a></td>
+                        <td><a target="_blank" style="text-decoration:none;" asp-action="Locations" asp-route-searchString="@sculpture.Location.LocationName">@sculpture.Location.LocationName</a></td>
+                        <td>@sculpture.Material</td>
+                        <td>@sculpture.Year год</td>
+                        <td>@sculpture.Square м<sup>2</sup></td>
+                        <td>@sculpture.Height м</td>
+                        @if (User.IsInRole("Administrator"))
+                        {
+                            <td><a title="Редактировать" style="color:cornflowerblue;" asp-action="EditSculptureNewForm" asp-route-sculptureId="@sculpture.Id"><span class="glyphicon glyphicon-pencil"></span></a></td>
+                            <td><a title="Удалить" style="color:rgb(220, 20, 60);" class="del" sculptureId="@sculpture.Id"><span class="glyphicon glyphicon-trash"></span></a></td>
+                        }
+                    </tr>
+                }
+            }
+        </table>
+    }
+    else
+    {
+        <h3>В базе данных отсутствует искомая информация о скульптурах...</h3>
+    }
+</div>
+
+@if (sculpturesId != null && sculpturesId.Length != 0)
+{
+    <script>
+        $("#dash").show();
+        var searchCount = @sculpturesId.Length;
+        $("table").attr("searchCount", "" + searchCount);
+    </script>
+}
+
+@if (ViewBag.Checked != 0)
+{
+    <script>
+        var checkedNum = @ViewBag.Checked;
+        var sortOrder = @ViewBag.SortOrder;
+        $("option[value=" + checkedNum + "]").attr("selected", true);
+        $("option[sortOrder=" + sortOrder + "]").attr("selected", true);
+    </script>
+}
+
+@if (ViewBag.Filters != null)
+{
+    foreach (var filter in ((List<int>)ViewBag.Filters))
+    {
+        <script>
+            var scriptFilter = @filter;
+            $("input[flag=" + scriptFilter + "]").attr("checked", true);
+        </script>
+    }
+}
+
+@if(ViewBag.SearchCriteria != null)
+{
+    <script>
+        var criteria = @ViewBag.SearchCriteria;
+        $("option[criteria=" + criteria + "]").attr("selected", "true");
+    </script>
+}
