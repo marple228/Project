@@ -630,8 +630,8 @@ namespace CourseProjectSculptureWorks.Controllers
             var searchedStyles = await _db.Styles.ToListAsync();
             if (searchString != null && searchString != String.Empty)
             {
-                List<Style> sculpturesForSearch = await _db.Styles
-                                                        .ToListAsync();
+                List<Style> sculpturesForSearch = await _db.Styles.FromSql("GetStyles").ToListAsync(); //await _db.Styles
+                                                        //.ToListAsync();
 
                 if (searchCriteria == 0)
                 {

@@ -19,13 +19,7 @@ namespace CourseProjectSculptureWorks
 
         public async Task Seed()
         {
-            await _roleManager.CreateAsync(new IdentityRole("Administrator"));
-            await _roleManager.CreateAsync(new IdentityRole("Guide"));
-
-            var admin = await _userManager.FindByEmailAsync("admin@gmail.com");
-            var guide = await _userManager.FindByEmailAsync("guide@gmail.com");
-            await _userManager.AddToRoleAsync(admin, "Administrator");
-            await _userManager.AddToRoleAsync(guide, "Guide");
+            await _roleManager.CreateAsync(new IdentityRole("User"));
         }
     }
 }

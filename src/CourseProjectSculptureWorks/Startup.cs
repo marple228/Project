@@ -63,7 +63,8 @@ namespace CourseProjectSculptureWorks
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public async void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory,
+            UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
@@ -91,6 +92,8 @@ namespace CourseProjectSculptureWorks
                     name: "default",
                     template: "{controller=Home}/{action=Sculptures}/{id?}");
             });
+
+            //await new DbSeed(userManager, roleManager).Seed();
         }
     }
 }
